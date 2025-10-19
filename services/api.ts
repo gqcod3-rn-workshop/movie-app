@@ -42,7 +42,10 @@ const apiRequest = async <T>(endpoint: string, options?: RequestInit): Promise<T
  * @returns Complete API URL
  */
 const buildEndpoint = (path: string, params?: Record<string, string | number | boolean | undefined>): string => {
-    const url = new URL(path, TMDB_CONFIG.BASE_URL);
+    
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    const fullUrl = `${TMDB_CONFIG.BASE_URL}/${cleanPath}`;
+    const url = new URL(fullUrl);
 
     if (params) {
         Object.entries(params).forEach(([key, value]) => {
