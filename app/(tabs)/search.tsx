@@ -1,10 +1,14 @@
 import MovieCard from "@/components/MovieCard";
 import SearchBar from "@/components/SearchBar";
+
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
+
 import useDebounce from "@/hooks/useDebounce";
 import useFetch from "@/hooks/useFetch";
+
 import { fetchMovies } from "@/services/api";
+import { updateSearchCount } from "@/services/appwrite";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 
@@ -18,7 +22,7 @@ import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 const Search = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
-    const debouncedQuery = useDebounce(searchQuery, 500);
+    const debouncedQuery = useDebounce(searchQuery, 1000);
 
     const {
         data: movies = [],
@@ -36,17 +40,37 @@ const Search = () => {
         setSearchQuery(text);
     };
 
-
     /**
      * Use effect Hook to trigger movie search when the debounced query changes.
      */
     useEffect(() => {
-        if (debouncedQuery.trim()) {
-            loadMovies();
-        } else {
-            reset();
-        }
+        const performSearch = async () => {
+            if (debouncedQuery.trim()) {
+                await loadMovies();
+            } else {
+                reset();
+            }
+        };
+
+        performSearch();
     }, [debouncedQuery]);
+
+    /**
+     * Use effect Hook to save search count when movies are loaded.
+     */
+    useEffect(() => {
+        const saveSearchCount = async () => {
+            if (debouncedQuery.trim() && movies && movies.length > 0) {
+                try {
+                    await updateSearchCount(debouncedQuery, movies[0]);
+                } catch (error) {
+                    console.error('Failed to update search count:', error);
+                }
+            }
+        };
+
+        saveSearchCount();
+    }, [movies, debouncedQuery]);
 
 
     if (loading) {
@@ -87,7 +111,7 @@ const Search = () => {
                             value={searchQuery}
                             onChangeText={handleSearch}
                         />
-                        {debouncedQuery.trim() && !loading && !error && (
+                        {debouncedQuery.trim() && !loading && !error && movies && movies.length > 0 && (
                             <Text className="text-lg text-white font-bold mt-5 mb-3">
                                 Search Results for{" "}
                                 <Text className="text-accent">{debouncedQuery}</Text>
