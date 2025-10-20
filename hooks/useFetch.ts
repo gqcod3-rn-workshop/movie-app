@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 /**
- * Personalized UseFetch Hook
+ * Custom UseFetch Hook
  * @summary
  * This hook simplifies data fetching in React components. It manages loading, error, and data states,
  * and provides a refetch function to manually trigger data fetching.
