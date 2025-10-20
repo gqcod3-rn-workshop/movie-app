@@ -2,8 +2,8 @@ import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 
+import useFetch from "@/hooks/useFetch";
 import { fetchMovies } from "@/services/api";
-import useFetch from "@/services/useFetch";
 import { useRouter } from "expo-router";
 
 import MovieCard from "@/components/MovieCard";

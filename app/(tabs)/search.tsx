@@ -2,8 +2,9 @@ import MovieCard from "@/components/MovieCard";
 import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
+import useDebounce from "@/hooks/useDebounce";
+import useFetch from "@/hooks/useFetch";
 import { fetchMovies } from "@/services/api";
-import useFetch from "@/services/useFetch";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 
@@ -17,6 +18,7 @@ import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 const Search = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
+    const debouncedQuery = useDebounce(searchQuery, 500);
 
     const {
         data: movies = [],
@@ -24,7 +26,7 @@ const Search = () => {
         error,
         refetch: loadMovies,
         reset,
-    } = useFetch(() => fetchMovies({ query: searchQuery }), false);
+    } = useFetch(() => fetchMovies({ query: debouncedQuery }), false);
 
     /**
      * Handles search input changes.
@@ -36,19 +38,15 @@ const Search = () => {
 
 
     /**
-     * Use Effecto Hook to trigger movie search on query change with debounce.
+     * Use effect Hook to trigger movie search when the debounced query changes.
      */
     useEffect(() => {
-        const timeoutId = setTimeout(async () => {
-            if (searchQuery.trim()) {
-                await loadMovies();
-            } else {
-                reset();
-            }
-        }, 500);
-
-        return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
+        if (debouncedQuery.trim()) {
+            loadMovies();
+        } else {
+            reset();
+        }
+    }, [debouncedQuery]);
 
 
     if (loading) {
@@ -89,10 +87,10 @@ const Search = () => {
                             value={searchQuery}
                             onChangeText={handleSearch}
                         />
-                        {searchQuery.trim() && !loading && !error && (
+                        {debouncedQuery.trim() && !loading && !error && (
                             <Text className="text-lg text-white font-bold mt-5 mb-3">
                                 Search Results for{" "}
-                                <Text className="text-accent">{searchQuery}</Text>
+                                <Text className="text-accent">{debouncedQuery}</Text>
                             </Text>
                         )}
                     </View>
@@ -115,7 +113,7 @@ const Search = () => {
                 ListEmptyComponent={
                     <View className="mt-10 px-5">
                         <Text className="text-center text-gray-500 text-lg">
-                            {searchQuery.trim()
+                            {debouncedQuery.trim()
                                 ? "No movies found"
                                 : "Start typing to search for movies"}
                         </Text>
